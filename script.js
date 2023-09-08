@@ -69,9 +69,10 @@ async function connectToSearchResults() {
         connectToSearchResults();
     }, 2000)
 
-// follow everyone - with random interval
-let counter = 100;
 
+
+
+// follow everyone - with random interval
 async function connectToSearchResults() {
   const container = document.querySelector('.reusable-search__entity-result-list');
   if (!container) return;
@@ -79,15 +80,22 @@ async function connectToSearchResults() {
   const resultItems = container.children;
   const itemKeys = Object.keys(resultItems);
   let i = 0, len = itemKeys.length;
+  let timer = 1000;
+    
   while(true){
     window.scrollTo(0, document.body.scrollHeight);
     if (i >= len) {
       console.log("Clearing setInterval...");
       const next = document.querySelector(".artdeco-pagination__button.artdeco-pagination__button--next.artdeco-button.artdeco-button--muted.artdeco-button--icon-right.artdeco-button--1.artdeco-button--tertiary.ember-view")
      
-      if(next) next.click();
+      if(next) {
+          next.click();
+      }
+      else {
+        return "NO_NEXT_BTN"
+      }
         
-      return;
+      return "NEXT";
     }
     const itemKey = itemKeys[i++];
     if (!isNaN(itemKey)) {
@@ -95,11 +103,14 @@ async function connectToSearchResults() {
       if (connectBtn.innerText === 'Follow') {
           const profileText = resultItems[itemKey].querySelector(".linked-area.flex-1.cursor-pointer");
 
-          const timer = Math.random() * 5000;
+          timer += Math.random() * 1000;
           console.log(timer);
           setTimeout(() => {
-              console.log(profileText?.innerText);
-              connectBtn?.click();
+              if(profileText)
+                  console.log(profileText.innerText);
+              
+              if(connectBtn)
+              connectBtn.click();
           }, timer);
         
       }
@@ -107,14 +118,22 @@ async function connectToSearchResults() {
   }
 }
 
+
 let myFunction = function() {
     console.log("counter: ", counter)
-    counter += Math.random() * 500;
+    counter += Math.random() * 1000;
     
-    connectToSearchResults();
+    const response = connectToSearchResults();
+
+    if(response === 'NO_NEXT_BTN') {
+        console.log("LAST_PAGE");
+        return;
+    }
     
     setTimeout(myFunction, counter);
 }
 
-setTimeout(myFunction, counter);
 
+let counter = 100;
+
+setTimeout(myFunction, counter);
