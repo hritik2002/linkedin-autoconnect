@@ -68,3 +68,53 @@ async function connectToSearchResults() {
 }
         connectToSearchResults();
     }, 2000)
+
+// follow everyone - with random interval
+let counter = 100;
+
+async function connectToSearchResults() {
+  const container = document.querySelector('.reusable-search__entity-result-list');
+  if (!container) return;
+
+  const resultItems = container.children;
+  const itemKeys = Object.keys(resultItems);
+  let i = 0, len = itemKeys.length;
+  while(true){
+    window.scrollTo(0, document.body.scrollHeight);
+    if (i >= len) {
+      console.log("Clearing setInterval...");
+      const next = document.querySelector(".artdeco-pagination__button.artdeco-pagination__button--next.artdeco-button.artdeco-button--muted.artdeco-button--icon-right.artdeco-button--1.artdeco-button--tertiary.ember-view")
+     
+      if(next) next.click();
+        
+      return;
+    }
+    const itemKey = itemKeys[i++];
+    if (!isNaN(itemKey)) {
+      const connectBtn = resultItems[itemKey].querySelector('button');
+      if (connectBtn.innerText === 'Follow') {
+          const profileText = resultItems[itemKey].querySelector(".linked-area.flex-1.cursor-pointer");
+
+          const timer = Math.random() * 5000;
+          console.log(timer);
+          setTimeout(() => {
+              console.log(profileText?.innerText);
+              connectBtn?.click();
+          }, timer);
+        
+      }
+    }
+  }
+}
+
+let myFunction = function() {
+    console.log("counter: ", counter)
+    counter += Math.random() * 500;
+    
+    connectToSearchResults();
+    
+    setTimeout(myFunction, counter);
+}
+
+setTimeout(myFunction, counter);
+
