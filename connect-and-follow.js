@@ -10,7 +10,6 @@ async function connectToSearchResults() {
   while(true){
 
       if(timer >= 5000) {timer = 1000}
-    window.scrollTo(0, document.body.scrollHeight);
     if (i >= len) {
       console.log("Clearing setInterval...");
       const next = document.querySelector(".artdeco-pagination__button.artdeco-pagination__button--next.artdeco-button.artdeco-button--muted.artdeco-button--icon-right.artdeco-button--1.artdeco-button--tertiary.ember-view")
@@ -71,10 +70,11 @@ async function connectToSearchResults() {
   }
 }
 
+var counter = 2000;
 
 let myFunction = async function() {
     console.log("counter: ", counter)
-    counter += Math.floor(Math.random()*10 + 1) * 200;
+    counter += Math.floor(Math.random()*10 + 1) * 2000;
     
     const response = await connectToSearchResults();
 
@@ -83,14 +83,10 @@ let myFunction = async function() {
         return;
     }
 
-    if(counter >= 10000) {
-        counter = 1000;
+    if(counter >= 20000) {
+        counter = 2000;
     }
     
-    setTimeout(myFunction, counter);
 }
 
-
-let counter = 100;
-
-setTimeout(myFunction, counter);
+setInterval(myFunction, counter);
