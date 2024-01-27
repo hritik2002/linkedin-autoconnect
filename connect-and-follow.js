@@ -1,92 +1,138 @@
-async function connectToSearchResults() {
-  const container = document.querySelector('.reusable-search__entity-result-list');
-  if (!container) return;
+let TRAVERSE_PROFILE_MS = 400;
 
-  const resultItems = container.children;
-  const itemKeys = Object.keys(resultItems);
-  let i = 0, len = itemKeys.length;
-  let timer = 1000;
-    
-  while(true){
-
-      if(timer >= 5000) {timer = 1000}
-    if (i >= len) {
-      console.log("Clearing setInterval...");
-      const next = document.querySelector(".artdeco-pagination__button.artdeco-pagination__button--next.artdeco-button.artdeco-button--muted.artdeco-button--icon-right.artdeco-button--1.artdeco-button--tertiary.ember-view")
-     
-      if(next) {
-          next.click();
-      }
-      else {
-        return "NO_NEXT_BTN"
-      }
-        
-      return "NEXT";
+const addNote = (message) => {
+        const addANoteButton = document.querySelector("[aria-label='Add a note']");
+        console.log(addANoteButton);
     }
-    const itemKey = itemKeys[i++];
-    if (!isNaN(itemKey)) {
-      const connectBtn = resultItems[itemKey].querySelector('button');
-        if (connectBtn.innerText === 'Connect' || connectBtn.innerText === 'Follow') {
-          if (connectBtn.innerText === 'Connect') {
-            const profileText = resultItems[itemKey].querySelector(".linked-area.flex-1.cursor-pointer");
+    const sendWithoutNote = (message) => {
+        const sendWithoutNoteButton = document.querySelector("[aria-label='Send now']");
+        sendWithoutNoteButton.click();
+        traverseProfilesSettings.connectionLimit -= 1;
+    }
+    const sleep = async (timeMs = 200) => {
+    	return new Promise((resolve) => {
+      	setTimeout(() => {
+        	resolve("resolved")
+        }, timeMs)
+      })
+    }
 
-          timer += Math.random() * 1000;
-          console.log("timer: ", timer);
-          setTimeout(() => {
-              if(profileText)
-                  console.log("CONNECT: ", profileText?.innerText);
-              
-              if(connectBtn?.click) {
-                  connectBtn.click();
-                  
-                  setTimeout(() => {
-            const sendBtn = document.querySelector('.artdeco-button.artdeco-button--2.artdeco-button--primary.ember-view.ml1');
-            console.log("sendBtn: ", sendBtn);
-            if (sendBtn) sendBtn.click();
-          }, 500);
-              }
-                
-          }, timer);
+    const sendConnectionReq = async (profile, timeoutMs=500) => {
+        try {
+            const connectButton = profile.querySelector('button');
+            const isConnectButton = connectButton.innerText === 'Connect';
+            const message = "Hello"
     
-        } else {
-              const profileText = resultItems[itemKey].querySelector(".linked-area.flex-1.cursor-pointer");
-
-          timer += Math.random() * 1000;
-          console.log(timer);
-          setTimeout(() => {
-              if(profileText)
-                  console.log("FOLLOW: ", profileText?.innerText);
-              
-              if(connectBtn?.click)
-              connectBtn.click();
-          }, timer);
-          connectBtn.click();
+            if(isConnectButton) {
+                connectButton.click()
+                sendWithoutNote(message);
+                await sleep(500);
+            }
+        } catch (error) {
+            console.log(`FAILED_IN_CONNECT_FN: ${error.message}`);
         }
-      }
-
         
-     
     }
-  }
+    const sendFollowReq = (profile) => {
+        try {
+            const followButton = profile.querySelector('button');
+            const isFollowButton = followButton.innerText === 'Follow';
+            
+            console.log("FOLLOW REQ", profile.innerText);
+    
+            if(isFollowButton) {
+                followButton.click();
+            }
+        }catch(error) {
+            console.log("FAILED_IN_FOLLOW_FN", error.message);
+        }
+        
+    }
+
+const loadNextProfiles = () => {
+    const nextButton = document.querySelector('[aria-label="Next"]');
+
+    if(!nextButton || nextButton.disabled) {
+        return false;
+    }
+
+    nextButton.click();
+
+    return true;
 }
 
-var counter = 2000;
 
-let myFunction = async function() {
-    console.log("counter: ", counter)
-    counter += Math.floor(Math.random()*10 + 1) * 2000;
-    
-    const response = await connectToSearchResults();
+const traverseProfiles = async (traverseProfilesSettings) => {
+    const {isFollowOnly} = traverseProfilesSettings;
+    const profilesContainer = document.querySelector('.reusable-search__entity-result-list');
 
-    if(response == 'NO_NEXT_BTN') {
-        console.log("LAST_PAGE");
+    if(!profilesContainer) {
         return;
     }
 
-    if(counter >= 20000) {
-        counter = 2000;
-    }
-    
+    return new Promise((resolve) => {
+        try{
+            const profiles = profilesContainer.children;
+            profilesArray = Object.values(profiles);
+            const profilesCount = profilesArray.length;
+            let currentProfileIndex = 0;
+        
+            const profileIntervalTimeMs = setInterval(async () => {
+                if(currentProfileIndex >= profilesCount) {
+                    clearInterval(profileIntervalTimeMs);
+                    resolve("resolve")
+                    return;
+                }
+            
+                const profile = profilesArray[currentProfileIndex];
+                currentProfileIndex += 1;
+
+            
+                const connectButton = profile.querySelector('button');
+                const isConnectButton = connectButton.innerText === 'Connect';
+                const isFollowButton = connectButton.innerText === 'Follow';
+                
+                if(!isFollowOnly && isConnectButton) {
+                    sendConnectionReq(profile);
+                }else if(isFollowButton) {
+                    sendFollowReq(profile);
+                }
+        
+                TRAVERSE_PROFILE_MS = TRAVERSE_PROFILE_MS + Math.floor(Math.random() * 500) + 1;
+        
+                if(TRAVERSE_PROFILE_MS >= 2000) {
+                    TRAVERSE_PROFILE_MS = 400;
+                }
+            }, TRAVERSE_PROFILE_MS);
+        }catch(error) {
+            console.log(error.message)
+        }
+    });
 }
 
-setInterval(myFunction, counter);
+const main = async (traverseProfilesSettings) => {
+    while(true) {
+        try {
+            await traverseProfiles(traverseProfilesSettings);
+        
+            if(traverseProfilesSettings.connectionLimit <= 0 || !loadNextProfiles()) {
+                console.log(`killing main`);
+                return;
+            }else {
+                main();
+            }
+        } catch (error) {
+            console.log(`FAIL_MAIN: ${error.message}`);
+            return;
+        }
+    }
+}
+
+const traverseProfilesSettings = {
+    isFollowOnly: false,
+    connectOnNote: false,
+    noteMessage: `Hello, I am Hritik Sharma. Looking forward to connect with you and explore opportunities around your network. Thanks.`,
+    connectionLimit: 20
+}
+
+main(traverseProfilesSettings);
