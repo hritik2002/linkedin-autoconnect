@@ -64,7 +64,12 @@ const loadNextProfiles = () => {
 
 const traverseProfiles = async (traverseProfilesSettings) => {
     const {isFollowOnly} = traverseProfilesSettings;
-    const profilesContainer = document.querySelector('.reusable-search__entity-result-list');
+    let profilesContainer = document.querySelectorAll('.reusable-search__entity-result-list');
+    if(profilesContainer.length > 2) {
+        profilesContainer = profilesContainer[1];
+    }else {
+        profilesContainer = profilesContainer[0];
+    }
 
     if(!profilesContainer) {
         return;
@@ -80,8 +85,8 @@ const traverseProfiles = async (traverseProfilesSettings) => {
             const profileIntervalTimeMs = setInterval(async () => {
                 if(currentProfileIndex >= profilesCount) {
                     clearInterval(profileIntervalTimeMs);
-                    resolve("resolve")
-                    return;
+                    return resolve("resolve")
+                    
                 }
             
                 const profile = profilesArray[currentProfileIndex];
@@ -89,6 +94,7 @@ const traverseProfiles = async (traverseProfilesSettings) => {
 
             
                 const connectButton = profile.querySelector('button');
+                if(!connectButton) return resolve();
                 const isConnectButton = connectButton.innerText === 'Connect';
                 const isFollowButton = connectButton.innerText === 'Follow';
                 
