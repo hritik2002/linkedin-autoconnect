@@ -24,9 +24,9 @@ const addNote = (message) => {
             const message = "Hello"
     
             if(isConnectButton) {
-                connectButton.click()
+                connectButton.click();
                 sendWithoutNote(message);
-                await sleep(500);
+                await sleep(600);
             }
         } catch (error) {
             console.log(`FAILED_IN_CONNECT_FN: ${error.message}`);
@@ -63,6 +63,7 @@ const loadNextProfiles = () => {
 
 
 const traverseProfiles = async (traverseProfilesSettings) => {
+    window.scrollTo(0, 1000);
     const {isFollowOnly} = traverseProfilesSettings;
     let profilesContainer = document.querySelectorAll('.reusable-search__entity-result-list');
     if(profilesContainer.length > 2) {
@@ -120,12 +121,13 @@ const main = async (traverseProfilesSettings) => {
     while(true) {
         try {
             await traverseProfiles(traverseProfilesSettings);
+            const isLoadNext = loadNextProfiles();
+            console.log(isLoadNext, traverseProfilesSettings.connectionLimit)
+            await sleep(Math.floor(Math.random(2000) + 3000)); ;
         
-            if(traverseProfilesSettings.connectionLimit <= 0 || !loadNextProfiles()) {
+            if(traverseProfilesSettings.connectionLimit <= 0 || !isLoadNext) {
                 console.log(`killing main`);
                 return;
-            }else {
-                main();
             }
         } catch (error) {
             console.log(`FAIL_MAIN: ${error.message}`);
@@ -135,7 +137,7 @@ const main = async (traverseProfilesSettings) => {
 }
 
 const traverseProfilesSettings = {
-    isFollowOnly: false,
+    isFollowOnly: true,
     connectOnNote: false,
     noteMessage: `Hello, I am Hritik Sharma. Looking forward to connect with you and explore opportunities around your network. Thanks.`,
     connectionLimit: 20
