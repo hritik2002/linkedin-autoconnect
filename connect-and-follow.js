@@ -19,22 +19,19 @@ const addNote = (message) => {
     }
 
     const sendConnectionReq = async (profile, timeoutMs=500) => {
-        console.log(`sending connection req to: `)
-        console.log(profile.innerText)
         try {
             const connectButton = profile.querySelector('button');
             const isConnectButton = connectButton.innerText === 'Connect';
             const message = "Hello"
     
-            if(isConnectButton && connectButton?.click) {
+            if(isConnectButton) {
                 connectButton?.click?.()
                 sendWithoutNote(message);
-                connectButton?.click
-                
+                console.log(`newConnections: ${++newConnections}`);
                 await sleep(500);
             }
         } catch (error) {
-            
+            console.log(`FAILED_IN_CONNECT_FN: ${error.message}`);
         }
         
     }
@@ -42,17 +39,15 @@ const addNote = (message) => {
         try {
             const followButton = profile.querySelector('button');
             const isFollowButton = followButton.innerText === 'Follow';
-
-            if(!followButton?.click) {
-                return;
-            }
+            
+            console.log("FOLLOW REQ", profile.innerText);
+    
             if(followButton?.click) {
-                console.log("FOLLOW REQ\n", profile.innerText);
                 console.log(`Total Follows: ${++totalFollows}`);
                 followButton.click?.();
             }
         }catch(error) {
-            
+            console.log("FAILED_IN_FOLLOW_FN", error.message);
         }
         
     }
@@ -67,6 +62,15 @@ const loadNextProfiles = () => {
     nextButton?.click?.();
 
     return true;
+}
+
+const isNotEngineer = (profile) => {
+    const lowercasedProfile = profile?.innerText?.toLowerCase?.();
+                if(!lowercasedProfile.includes("engineer") && !lowercasedProfile.includes("sde")) {
+                console.log(lowercasedProfile);
+                console.log("NOT ENGINEER");
+                return true;
+            }
 }
 
 
@@ -101,9 +105,13 @@ const traverseProfiles = async (traverseProfilesSettings) => {
                 const profile = profilesArray[currentProfileIndex];
                 currentProfileIndex += 1;
 
+                // if(isNotEngineer(profile))return;
+
             
                 const connectButton = profile.querySelector('button');
+                console.log(`connectButton: ${connectButton}`)
                 if(!connectButton) return resolve();
+                const isMessageButton = connectButton.innerText === 'Message';
                 const isConnectButton = connectButton.innerText === 'Connect';
                 const isFollowButton = connectButton.innerText === 'Follow';
                 
@@ -120,7 +128,7 @@ const traverseProfiles = async (traverseProfilesSettings) => {
                 }
             }, TRAVERSE_PROFILE_MS);
         }catch(error) {
-            
+            console.log(error.message)
         }
     });
 }
@@ -131,20 +139,21 @@ const main = async (traverseProfilesSettings) => {
             await traverseProfiles(traverseProfilesSettings);
         
             if(traverseProfilesSettings.connectionLimit <= 0 || !loadNextProfiles()) {
-      console.log(`killing main`);
+                console.log(`killing main`);
                 loadNextProfiles();
                 return;
             }else {
                 main(traverseProfilesSettings);
             }
         } catch (error) {
+            console.log(`FAIL_MAIN: ${error.message}`);
             return;
         }
     }
 }
 
 const traverseProfilesSettings = {
-    isFollowOnly: true,
+    isFollowOnly: false,
     connectOnNote: false,
     noteMessage: `Hello, I am Hritik Sharma. Looking forward to connect with you and explore opportunities around your network. Thanks.`,
     connectionLimit: 200
